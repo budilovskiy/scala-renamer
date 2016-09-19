@@ -3,7 +3,7 @@ import java.io.File
 import com.typesafe.config.ConfigFactory
 
 import scala.util.Try
-import scala.xml.{NodeSeq, XML}
+import scala.xml.{Elem, XML}
 
 /**
   * Created by Maksim Budilovskiy on 19.09.2016.
@@ -14,17 +14,15 @@ object Application extends App {
   val config = ConfigFactory.load()
   val xmlPath: String = config.getConfig("xmlPath").getString("path")
   val folderPath: String = config.getConfig("folderPath").getString("path")
-  val xml = XML loadFile xmlPath
+  val xml: Elem = XML loadFile xmlPath
 
-  val indexes: NodeSeq = xml \\ "filenames" \\ "filename" \ "index"
-  val names: NodeSeq = xml \\ "filenames" \\ "filename" \ "name"
+  val indexes: Seq[String] = (xml \\ "filenames" \\ "filename" \ "index").theSeq.map(_.text)
+  val names: Seq[String] = (xml \\ "filenames" \\ "filename" \ "name").theSeq.map(_.text)
 
-  def newNames(xs: NodeSeq, ys: NodeSeq): Seq[String] = {
-    (xs.theSeq.map(_.text) zip ys.theSeq.map(_.text)).map(x => x._1 + "_" + x._2)
-  }
+  def newNames(xs: Seq[String], ys: Seq[String]): Seq[String] =
+    (xs zip ys).map(x => x._1 + "_" + x._2)
 
-  val oldNames: Seq[String] = names.map(_.text)
-  val namesMap: Map[String, String] = (oldNames zip newNames(indexes, names)).toMap
+  val namesMap: Map[String, String] = (names zip newNames(indexes, names)).toMap
 
   def rename(fileName: String): Unit = {
     val newName = namesMap(fileName)
@@ -36,6 +34,6 @@ object Application extends App {
     }
   }
 
-  oldNames.foreach(rename)
-  
+  names.foreach(rename)
+
 }
