@@ -7,6 +7,7 @@ import scala.xml.{NodeSeq, XML}
 
 /**
   * Created by Maksim Budilovskiy on 19.09.2016.
+  * XML Formatter from CSV at http://www.freeformatter.com/csv-to-xml-converter.html
   */
 object Application extends App {
 
@@ -18,13 +19,12 @@ object Application extends App {
   val indexes: NodeSeq = xml \\ "filenames" \\ "filename" \ "index"
   val names: NodeSeq = xml \\ "filenames" \\ "filename" \ "name"
 
-  def makeList(xs: NodeSeq, ys: NodeSeq): Seq[(String, String)] = {
-    xs.theSeq.map(_.text) zip ys.theSeq.map(_.text)
+  def newNames(xs: NodeSeq, ys: NodeSeq): Seq[String] = {
+    (xs.theSeq.map(_.text) zip ys.theSeq.map(_.text)).map(x => x._1 + "_" + x._2)
   }
 
   val oldNames: Seq[String] = names.map(_.text)
-  val newNames: Seq[String] = makeList(indexes, names).map(x => x._1 + "_" + x._2)
-  val namesMap: Map[String, String] = (oldNames zip newNames).toMap
+  val namesMap: Map[String, String] = (oldNames zip newNames(indexes, names)).toMap
 
   def rename(fileName: String): Unit = {
     val newName = namesMap(fileName)
@@ -37,5 +37,5 @@ object Application extends App {
   }
 
   oldNames.foreach(rename)
-
+  
 }
